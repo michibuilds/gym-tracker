@@ -267,13 +267,13 @@ var WEEKDAYS=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','S
 var MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
 var EXERCISES={
-  kraft:['Bankdrücken','Schrägbankdrücken','Butterfly / Flys','Trizepsdrücken','Klimmzüge / Latzug','Vorgebeugtes Rudern','Face Pulls','Bizepscurls','Kniebeugen','Ausfallschritte','Wadenheben','Schulterdrücken','Beinpresse'],
+  kraft:['Bankdrücken','Schrägbankdrücken','Butterfly / Flys','Trizepsdrücken','Klimmzüge','Latzug','Vorgebeugtes Rudern','Face Pulls','Bizepscurls','Kniebeugen','Ausfallschritte','Wadenheben','Schulterdrücken','Beinpresse'],
   cal:['Dips','Pike Push-Ups','Negative Klimmzüge','Tuck L-Sit','Plank','Hollow Body Rocks','TRX Push-Ups']
 };
 // Welche Calisthenics sind Zeitübungen (Sekunden halten) statt Wiederholungen
 var TIME_EXERCISES=['Negative Klimmzüge','Tuck L-Sit','Plank','Hollow Body Rocks'];
 // Calisthenics ohne Zusatzgewicht (nur Wdh)
-var BODYWEIGHT=['Dips','Pike Push-Ups','TRX Push-Ups'];
+var BODYWEIGHT=['Dips','Pike Push-Ups','TRX Push-Ups','Klimmzüge'];
 
 var MILESTONES=[
   {n:'Hauskatze',kg:4,icon:'ti-cat'},
@@ -315,7 +315,7 @@ var DEFAULT_PLAN=[
     {n:'Trizepsdrücken',goal:'3×10–12',sets:3,bodyweight:false,time:false}
   ]},
   {id:'tag2',title:'Tag 2 — Pull',ex:[
-    {n:'Klimmzüge / Latzug',goal:'4×8–12',sets:4,bodyweight:false,time:false},
+    {n:'Latzug',goal:'4×8–12',sets:4,bodyweight:false,time:false},
     {n:'Negative Klimmzüge',goal:'3× langsam',sets:3,bodyweight:true,time:true},
     {n:'Vorgebeugtes Rudern',goal:'4×8–12',sets:4,bodyweight:false,time:false},
     {n:'Face Pulls',goal:'3×12–15',sets:3,bodyweight:false,time:false},
@@ -352,6 +352,15 @@ function loadDB(){
   if(!DB.doneThisWeek)DB.doneThisWeek={};
   if(!DB.history)DB.history=[];
   if(!DB.sound)DB.sound='beep';
+  // Migration: alte Sammelübung "Klimmzüge / Latzug" → "Latzug"
+  var migrated=false, OLD='Klimmzüge / Latzug', NEW='Latzug';
+  DB.plan.forEach(function(day){day.ex.forEach(function(ex){if(ex.n===OLD){ex.n=NEW;migrated=true;}});});
+  ['kg','rep','sec'].forEach(function(w){
+    var ok=OLD+'|'+w, nk=NEW+'|'+w;
+    if(DB.lastValues[ok]!==undefined){if(DB.lastValues[nk]===undefined)DB.lastValues[nk]=DB.lastValues[ok];delete DB.lastValues[ok];migrated=true;}
+  });
+  DB.history.forEach(function(h){if(h.title&&h.title.indexOf(OLD)>=0){h.title=h.title.split(OLD).join(NEW);migrated=true;}});
+  if(migrated)saveDB();
   // Wochen-Reset prüfen
   var mon=getMonday();
   if(DB.weekStart!==mon){DB.doneThisWeek={};DB.weekStart=mon;saveDB();}
@@ -545,28 +554,35 @@ function waveSvg(){
 function setupSwipeGestures(){
   // Wert-Felder: vertikales Wischen ändert Wert
   document.querySelectorAll('.vfield').forEach(function(vf){
-    var startY=0,startVal=0,active=false;
+    var startY=0,startVal=0,active=false,lastNv=null;
     var which=vf.getAttribute('data-which');
     var step=(which==='kg')?2.5:1;
     var min=(which==='kg')?0:(which==='sec'?1:0);
+    var PXSTEP=20; // Wischweg pro Schritt (höher = weniger empfindlich)
     var valEl=vf.querySelector('.sval');
     var gUp=vf.querySelector('.ghost-up'), gDn=vf.querySelector('.ghost-down');
+    function snap(){
+      try{valEl.animate([{transform:'scale(1.18)'},{transform:'scale(1)'}],{duration:140,easing:'cubic-bezier(.2,.9,.3,1)'});}catch(e){}
+    }
     function setVal(nv){
+      var changed=(nv!==lastNv);
+      lastNv=nv;
       valEl.textContent=fmtNum(nv);
       if(gUp)gUp.textContent=fmtNum(nv+step);
       if(gDn)gDn.textContent=fmtNum(Math.max(min,nv-step));
       updateSetValue(vf,nv);
+      if(changed)snap();
     }
     vf.addEventListener('touchstart',function(e){
       active=true;startY=e.touches[0].clientY;
-      startVal=parseFloat(valEl.textContent.replace(',','.'))||0;
+      startVal=parseFloat(valEl.textContent.replace(',','.'))||0;lastNv=startVal;
       vf.classList.add('active');
     },{passive:true});
     vf.addEventListener('touchmove',function(e){
       if(!active)return;
       e.preventDefault();
       var dy=startY-e.touches[0].clientY;
-      var delta=Math.round(dy/12)*step;
+      var delta=Math.round(dy/PXSTEP)*step;
       var nv=startVal+delta;
       if(nv<min)nv=min;
       setVal(nv);
@@ -574,9 +590,9 @@ function setupSwipeGestures(){
     vf.addEventListener('touchend',function(){active=false;vf.classList.remove('active');},{passive:true});
     // Maus (Desktop-Test)
     vf.addEventListener('mousedown',function(e){
-      active=true;startY=e.clientY;startVal=parseFloat(valEl.textContent.replace(',','.'))||0;
+      active=true;startY=e.clientY;startVal=parseFloat(valEl.textContent.replace(',','.'))||0;lastNv=startVal;
       vf.classList.add('active');
-      function mm(ev){if(!active)return;var dy=startY-ev.clientY;var nv=startVal+Math.round(dy/12)*step;if(nv<min)nv=min;setVal(nv);}
+      function mm(ev){if(!active)return;var dy=startY-ev.clientY;var nv=startVal+Math.round(dy/PXSTEP)*step;if(nv<min)nv=min;setVal(nv);}
       function mu(){active=false;vf.classList.remove('active');document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);}
       document.addEventListener('mousemove',mm);document.addEventListener('mouseup',mu);
     });
@@ -614,7 +630,7 @@ function setupSwipeGestures(){
       row.classList.remove('dragging');row.classList.add('settled');
       if(horiz){
         var setIdx=parseInt(row.getAttribute('data-setidx'),10);
-        if(curX>maxX*0.5){
+        if(curX>maxX*0.3){
           row.classList.add('done');row.style.transform='';
           currentSets[setIdx].done=true;
           if(navigator.vibrate)navigator.vibrate(15);

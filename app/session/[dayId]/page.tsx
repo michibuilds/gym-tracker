@@ -5,22 +5,22 @@ import { useApp } from '@/context/AppContext'
 import { fmtNum, fmtTime, SOUNDS } from '@/lib/data'
 import type { Exercise, SetData } from '@/lib/types'
 
-/* ── Value field (vertical drag to change number) ── */
+/* ── Value field (vertical drag) ── */
 function VField({
-  exName, which, unit, initialVal, onUpdate,
+  exName, which, initialVal, onUpdate,
 }: {
   exName: string
   which: 'kg' | 'rep' | 'sec'
-  unit: string
   initialVal: number
   onUpdate: (val: number) => void
 }) {
   const step = which === 'kg' ? 2.5 : 1
   const min = which === 'kg' ? 0 : which === 'sec' ? 1 : 0
-  const PXSTEP = 20
+  const PXSTEP = 14
   const [val, setVal] = useState(initialVal)
   const startY = useRef(0)
   const startVal = useRef(initialVal)
+  const prevVal = useRef(initialVal)
   const [active, setActive] = useState(false)
   const elRef = useRef<HTMLDivElement>(null)
 
@@ -28,12 +28,15 @@ function VField({
 
   function updateVal(newVal: number) {
     const clamped = clamp(newVal)
+    if (clamped === prevVal.current) return
+    prevVal.current = clamped
     setVal(clamped)
     onUpdate(clamped)
     try {
-      elRef.current?.animate([{ transform: 'scale(1.18)' }, { transform: 'scale(1)' }], {
-        duration: 140, easing: 'cubic-bezier(.2,.9,.3,1)',
-      })
+      elRef.current?.animate(
+        [{ transform: 'scale(1.12)' }, { transform: 'scale(1)' }],
+        { duration: 100, easing: 'cubic-bezier(.2,.9,.3,1)' }
+      )
     } catch { /* ignore */ }
   }
 
@@ -46,19 +49,17 @@ function VField({
   function onTouchMove(e: React.TouchEvent) {
     e.preventDefault()
     const dy = startY.current - e.touches[0].clientY
-    const newVal = startVal.current + Math.round(dy / PXSTEP) * step
-    updateVal(newVal)
+    updateVal(startVal.current + Math.round(dy / PXSTEP) * step)
   }
 
   function onMouseDown(e: React.MouseEvent) {
     startY.current = e.clientY
     startVal.current = val
     setActive(true)
-    function mm(ev: MouseEvent) {
-      const dy = startY.current - ev.clientY
-      updateVal(startVal.current + Math.round(dy / PXSTEP) * step)
+    const mm = (ev: MouseEvent) => {
+      updateVal(startVal.current + Math.round((startY.current - ev.clientY) / PXSTEP) * step)
     }
-    function mu() {
+    const mu = () => {
       setActive(false)
       document.removeEventListener('mousemove', mm)
       document.removeEventListener('mouseup', mu)
@@ -137,7 +138,7 @@ function SetRow({
     const dx = e.touches[0].clientX - startX.current
     const dy = e.touches[0].clientY - startY.current
     if (!decided.current) {
-      if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
         decided.current = true
         horiz.current = Math.abs(dx) > Math.abs(dy)
       }
@@ -156,16 +157,14 @@ function SetRow({
   function onTouchEnd() {
     rowRef.current?.classList.add('settled')
     if (horiz.current) {
-      if (curX.current > maxX * 0.3) {
+      if (curX.current > maxX * 0.25) {
         isDoneRef.current = true
-        if (rowRef.current) rowRef.current.style.transform = ''
-        rowRef.current?.classList.add('done')
+        if (rowRef.current) { rowRef.current.style.transform = ''; rowRef.current.classList.add('done') }
         onDoneChange(true)
         if (navigator.vibrate) navigator.vibrate(15)
       } else {
         isDoneRef.current = false
-        if (rowRef.current) rowRef.current.style.transform = ''
-        rowRef.current?.classList.remove('done')
+        if (rowRef.current) { rowRef.current.style.transform = ''; rowRef.current.classList.remove('done') }
         onDoneChange(false)
       }
     }
@@ -177,7 +176,7 @@ function SetRow({
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M5 12l5 5L20 6" />
         </svg>
-        Erledigt
+        Done
       </div>
       <div
         ref={rowRef}
@@ -188,13 +187,11 @@ function SetRow({
       >
         <span className="setlbl">{label}</span>
         {!isBody && (
-          <VField
-            exName={ex.n} which="kg" unit="kg" initialVal={initialKg}
+          <VField exName={ex.n} which="kg" initialVal={initialKg}
             onUpdate={(v) => { kg.current = v; onUpdate(v, rep.current) }}
           />
         )}
-        <VField
-          exName={ex.n} which="rep" unit="Wdh" initialVal={initialRep}
+        <VField exName={ex.n} which="rep" initialVal={initialRep}
           onUpdate={(v) => { rep.current = v; onUpdate(isBody ? null : kg.current, v) }}
         />
         <div className="swipebar" />
@@ -203,24 +200,56 @@ function SetRow({
   )
 }
 
-/* ── Timer component ── */
-function TimerBlock({ exName, initialSec, sound, onUpdate }: {
-  exName: string
+/* ── Timer drag picker ── */
+function TimeDragger({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const startY = useRef(0)
+  const startVal = useRef(value)
+  const [active, setActive] = useState(false)
+  const STEP = 5
+  const PX_PER_STEP = 10
+
+  function compute(clientY: number) {
+    const steps = Math.round((startY.current - clientY) / PX_PER_STEP)
+    onChange(Math.max(STEP, startVal.current + steps * STEP))
+  }
+
+  return (
+    <p
+      className={`timer-countdown${active ? ' adj' : ''}`}
+      onTouchStart={(e) => { startY.current = e.touches[0].clientY; startVal.current = value; setActive(true) }}
+      onTouchMove={(e) => { e.preventDefault(); compute(e.touches[0].clientY) }}
+      onTouchEnd={() => setActive(false)}
+      onMouseDown={(e) => {
+        startY.current = e.clientY; startVal.current = value; setActive(true)
+        const mm = (ev: MouseEvent) => compute(ev.clientY)
+        const mu = () => { setActive(false); document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu) }
+        document.addEventListener('mousemove', mm); document.addEventListener('mouseup', mu)
+      }}
+    >
+      {fmtTime(value)}
+    </p>
+  )
+}
+
+/* ── Timer block ── */
+function TimerBlock({ initialSec, sound, onUpdate }: {
   initialSec: number
   sound: string
   onUpdate: (sec: number) => void
 }) {
-  const [remain, setRemain] = useState(initialSec)
-  const [running, setRunning] = useState(false)
-  const [finished, setFinished] = useState(false)
+  const [phase, setPhase] = useState<'idle' | 'running' | 'done'>('idle')
+  const [display, setDisplay] = useState(initialSec)
+  const [target, setTarget] = useState(initialSec)
   const ivRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const remainRef = useRef(initialSec)
-  const [targetSec, setTargetSec] = useState(initialSec)
+  const doneRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  function playSound(soundId: string) {
+  useEffect(() => () => { clearInterval(ivRef.current!); clearTimeout(doneRef.current!) }, [])
+
+  function playTimerSound() {
     try {
       const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-      const snd = SOUNDS.find((s) => s.id === soundId) || SOUNDS[0]
+      const snd = SOUNDS.find((s) => s.id === sound) || SOUNDS[0]
       const t = ctx.currentTime
       for (let i = 0; i < 3; i++) {
         const osc = ctx.createOscillator()
@@ -237,75 +266,58 @@ function TimerBlock({ exName, initialSec, sound, onUpdate }: {
   }
 
   function start() {
-    remainRef.current = remain > 0 ? remain : 30
-    setRemain(remainRef.current)
-    setFinished(false)
-    setRunning(true)
+    remainRef.current = target
+    setDisplay(target)
+    setPhase('running')
     ivRef.current = setInterval(() => {
       remainRef.current--
-      setRemain(remainRef.current)
+      setDisplay(remainRef.current)
       if (remainRef.current <= 0) {
         clearInterval(ivRef.current!)
-        setRunning(false)
-        setFinished(true)
-        setRemain(0)
-        playSound(sound)
+        setPhase('done')
+        playTimerSound()
         if (navigator.vibrate) navigator.vibrate([100, 50, 100])
+        doneRef.current = setTimeout(() => {
+          setPhase('idle')
+          setDisplay(target)
+          remainRef.current = target
+        }, 2500)
       }
     }, 1000)
   }
 
   function stop() {
     clearInterval(ivRef.current!)
-    setRunning(false)
+    setPhase('idle')
+    setDisplay(target)
+    remainRef.current = target
   }
 
-  useEffect(() => () => { clearInterval(ivRef.current!) }, [])
+  if (phase === 'done') {
+    return (
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p className="timer-done">DONE</p>
+      </div>
+    )
+  }
 
   return (
-    <>
-      <div className="wavebox">
-        <WaveSvg />
-        <p className={`timerval${finished ? ' fin' : ''}`}>{fmtTime(remain)}</p>
-      </div>
-      <button
-        className="pill big"
-        style={{ margin: '16px auto 0', display: 'flex' }}
-        onClick={running ? stop : start}
-      >
-        {running ? (
-          <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="6" width="12" height="12" rx="1" /></svg> Stopp</>
-        ) : (
-          <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 5v14l11-7z" /></svg> Halte-Timer starten</>
-        )}
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 40 }}>
+      {phase === 'idle' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <TimeDragger
+            value={target}
+            onChange={(v) => { setTarget(v); setDisplay(v); remainRef.current = v; onUpdate(v) }}
+          />
+          <p style={{ fontSize: 12, color: 'var(--faint)' }}>drag to adjust</p>
+        </div>
+      ) : (
+        <p className="timer-countdown">{fmtTime(display)}</p>
+      )}
+      <button className="pill big" onClick={phase === 'running' ? stop : start}>
+        {phase === 'running' ? 'Stop' : 'Start'}
       </button>
-      <div className="timeset" style={{ marginTop: 14 }}>
-        <span className="setlbl" style={{ alignSelf: 'center' }}>Ziel</span>
-        <VField
-          exName={exName} which="sec" unit="Sek." initialVal={targetSec}
-          onUpdate={(v) => { setTargetSec(v); setRemain(v); remainRef.current = v; onUpdate(v) }}
-        />
-      </div>
-    </>
-  )
-}
-
-function WaveSvg() {
-  const lines = []
-  for (let x = 10; x < 300; x += 14) {
-    const h = 6 + Math.round(Math.random() * 22)
-    lines.push(<line key={x} x1={x} y1={30 - h} x2={x} y2={30 + h} />)
-  }
-  return (
-    <svg viewBox="0 0 300 60" style={{ width: '100%', height: 46 }}>
-      <g fill="none" stroke="url(#wg)" strokeWidth="3" strokeLinecap="round">{lines}</g>
-      <defs>
-        <linearGradient id="wg" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#6ea8ff" />
-          <stop offset="1" stopColor="#9b7cff" />
-        </linearGradient>
-      </defs>
-    </svg>
+    </div>
   )
 }
 
@@ -319,13 +331,10 @@ export default function SessionPage() {
   const setsRef = useRef<SetData[]>([])
   const [maxX, setMaxX] = useState(250)
 
-  useEffect(() => {
-    setMaxX(window.innerWidth - 92)
-  }, [])
+  useEffect(() => { setMaxX(window.innerWidth - 92) }, [])
 
   const day = state?.plan.find((d) => d.id === dayId)
 
-  // Build initial sets array
   useEffect(() => {
     if (!day || !state) return
     const sets: SetData[] = []
@@ -360,7 +369,7 @@ export default function SessionPage() {
   function confirmLeave() {
     const anyDone = setsRef.current.some((s) => s.done)
     if (anyDone) {
-      if (confirm('Training verlassen? Nicht gespeicherte Sätze gehen verloren.')) router.push('/')
+      if (confirm('Leave workout? Unsaved sets will be lost.')) router.push('/')
     } else {
       router.push('/')
     }
@@ -392,7 +401,7 @@ export default function SessionPage() {
       newLastValues,
       day.id
     )
-    toast('Training gespeichert 💪')
+    toast('Workout saved 💪')
     router.push('/')
   }, [day, state, finishWorkout, toast, router])
 
@@ -400,8 +409,8 @@ export default function SessionPage() {
   if (!day) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: 'var(--dim)' }}>Tag nicht gefunden</p>
-        <button className="pill" style={{ marginTop: 16 }} onClick={() => router.push('/')}>Zurück</button>
+        <p style={{ color: 'var(--dim)' }}>Day not found</p>
+        <button className="pill" style={{ marginTop: 16 }} onClick={() => router.push('/')}>Back</button>
       </div>
     )
   }
@@ -423,7 +432,7 @@ export default function SessionPage() {
         onScroll={onScroll}
         style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollSnapType: 'y mandatory' }}
       >
-          {(() => {
+        {(() => {
           let offset = 0
           return day.ex.map((ex, ei) => {
             const setOffset = offset
@@ -444,19 +453,15 @@ export default function SessionPage() {
           })
         })()}
 
-        {/* Completion page */}
-        <section
-          className="expage"
-          style={{ justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}
-        >
+        <section className="expage" style={{ justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
           <div className="trophy">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12l5 5L20 6" />
             </svg>
           </div>
-          <p style={{ fontSize: 24, fontWeight: 600, marginBottom: 6 }}>Geschafft</p>
-          <p style={{ fontSize: 13, color: 'var(--dim)', marginBottom: 26 }}>{day.title} abgeschlossen</p>
-          <button className="pill big" onClick={handleFinish}>Training beenden</button>
+          <p style={{ fontSize: 24, fontWeight: 600, marginBottom: 6 }}>Done</p>
+          <p style={{ fontSize: 13, color: 'var(--dim)', marginBottom: 26 }}>{day.title} completed</p>
+          <button className="pill big" onClick={handleFinish}>Finish Workout</button>
         </section>
       </div>
     </div>
@@ -482,10 +487,10 @@ function ExercisePage({ ex, ei, total, state, setsRef, sound, maxX, setOffset }:
   const startT = lastT !== undefined ? lastT : 30
 
   function buildLastLabel() {
-    if (ex.time) return lastT !== undefined ? `zuletzt ${lastT} s` : 'noch keine Daten'
-    if (ex.bodyweight) return lastR !== undefined ? `zuletzt KG × ${lastR}` : 'noch keine Daten'
-    if (lastW !== undefined && lastR !== undefined) return `zuletzt ${fmtNum(lastW)} kg × ${lastR}`
-    return 'noch keine Daten'
+    if (ex.time) return lastT !== undefined ? `last: ${lastT}s` : 'no data yet'
+    if (ex.bodyweight) return lastR !== undefined ? `last: BW × ${lastR}` : 'no data yet'
+    if (lastW !== undefined && lastR !== undefined) return `last: ${fmtNum(lastW)} kg × ${lastR}`
+    return 'no data yet'
   }
 
   function buildIncreaseHint() {
@@ -494,18 +499,21 @@ function ExercisePage({ ex, ei, total, state, setsRef, sound, maxX, setOffset }:
     const topRep = parseInt(m[2], 10)
     if (lastR !== undefined && lastR >= topRep) {
       const txt = ex.bodyweight
-        ? `Ziel erreicht — jetzt auf ${topRep + 1} Wdh erhöhen`
-        : `Ziel erreicht — jetzt ${fmtNum((lastW || 0) + 2.5)} kg versuchen`
-      return <div className="increase-hint">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
-        {txt}
-      </div>
+        ? `Goal reached — try ${topRep + 1} reps`
+        : `Goal reached — try ${fmtNum((lastW || 0) + 2.5)} kg`
+      return (
+        <div className="increase-hint">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 19V5M6 11l6-6 6 6" />
+          </svg>
+          {txt}
+        </div>
+      )
     }
     return null
   }
 
   const allSets = setsRef.current
-
   const goalDisp = ex.goal.replace(/×/g, ' × ').replace(/\s+/g, ' ').trim()
 
   return (
@@ -514,27 +522,20 @@ function ExercisePage({ ex, ei, total, state, setsRef, sound, maxX, setOffset }:
         <div className="ex-badge">{ei + 1}</div>
         <div>
           <h2 className="ex-name">{ex.n}</h2>
-          {ex.time && <div className="ex-tag">Zeitübung</div>}
+          {ex.time && <div className="ex-tag">Timed</div>}
         </div>
       </div>
-      <p className="ex-goal">Ziel {goalDisp} · {buildLastLabel()}</p>
+      <p className="ex-goal">Goal {goalDisp} · {buildLastLabel()}</p>
       {buildIncreaseHint()}
 
       {ex.time ? (
-        <>
-          <TimerBlock
-            exName={ex.n}
-            initialSec={startT}
-            sound={sound}
-            onUpdate={(sec) => {
-              for (let si = 0; si < ex.sets; si++) allSets[setOffset + si].sec = sec
-            }}
-          />
-          <p className="swipehint">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-            {ei < total - 1 ? 'Wischen für nächste Übung' : 'Letzte Übung — dann beenden'}
-          </p>
-        </>
+        <TimerBlock
+          initialSec={startT}
+          sound={sound}
+          onUpdate={(sec) => {
+            for (let si = 0; si < ex.sets; si++) allSets[setOffset + si].sec = sec
+          }}
+        />
       ) : (
         <>
           <div className="sets">
@@ -549,18 +550,18 @@ function ExercisePage({ ex, ei, total, state, setsRef, sound, maxX, setOffset }:
                   initialKg={startW}
                   initialRep={startR}
                   maxX={maxX}
-                  onUpdate={(kg, rep) => {
-                    allSets[idx].kg = kg
-                    allSets[idx].rep = rep
-                  }}
-                  onDoneChange={(done) => {
-                    allSets[idx].done = done
-                  }}
+                  onUpdate={(kg, rep) => { allSets[idx].kg = kg; allSets[idx].rep = rep }}
+                  onDoneChange={(done) => { allSets[idx].done = done }}
                 />
               )
             })}
           </div>
-          <p className="swipehint">Walze drehen · Satz nach rechts wischen = erledigt</p>
+          <p className="swipehint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+            {ei < total - 1 ? 'Swipe up for next · swipe set right = done' : 'Last exercise · swipe set right = done'}
+          </p>
         </>
       )}
     </section>

@@ -1,81 +1,81 @@
 import type { PlanDay, Milestone, Sound } from './types'
 
-export const WEEKDAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag']
-export const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
+export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 export const EXERCISES = {
-  kraft: ['Bankdrücken', 'Schrägbankdrücken', 'Butterfly / Flys', 'Trizepsdrücken', 'Klimmzüge', 'Latzug', 'Vorgebeugtes Rudern', 'Face Pulls', 'Bizepscurls', 'Kniebeugen', 'Ausfallschritte', 'Wadenheben', 'Schulterdrücken', 'Beinpresse'],
-  cal: ['Dips', 'Pike Push-Ups', 'Negative Klimmzüge', 'Tuck L-Sit', 'Plank', 'Hollow Body Rocks', 'TRX Push-Ups'],
+  kraft: ['Bench Press', 'Incline Bench Press', 'Chest Flys', 'Tricep Pushdown', 'Pull-Ups', 'Lat Pulldown', 'Bent-Over Row', 'Face Pulls', 'Bicep Curls', 'Squats', 'Lunges', 'Calf Raises', 'Shoulder Press', 'Leg Press'],
+  cal: ['Dips', 'Pike Push-Ups', 'Negative Pull-Ups', 'Tuck L-Sit', 'Plank', 'Hollow Body Rocks', 'TRX Push-Ups'],
 }
 
-export const TIME_EXERCISES = ['Negative Klimmzüge', 'Tuck L-Sit', 'Plank', 'Hollow Body Rocks']
-export const BODYWEIGHT_EXERCISES = ['Dips', 'Pike Push-Ups', 'TRX Push-Ups', 'Klimmzüge']
+export const TIME_EXERCISES = ['Negative Pull-Ups', 'Tuck L-Sit', 'Plank', 'Hollow Body Rocks']
+export const BODYWEIGHT_EXERCISES = ['Dips', 'Pike Push-Ups', 'TRX Push-Ups', 'Pull-Ups']
 
 export const MILESTONES: Milestone[] = [
-  { n: 'Hauskatze', kg: 4, icon: '🐱' },
-  { n: 'Bulldogge', kg: 25, icon: '🐶' },
-  { n: 'Reifen', kg: 60, icon: '⭕' },
-  { n: 'Ein Mensch', kg: 75, icon: '🧍' },
-  { n: 'Waschmaschine', kg: 90, icon: '🫧' },
-  { n: 'Kühlschrank', kg: 120, icon: '🧊' },
-  { n: 'Löwe', kg: 190, icon: '🦁' },
-  { n: 'Klavier', kg: 300, icon: '🎹' },
-  { n: 'Kuh', kg: 450, icon: '🐄' },
-  { n: 'Motorrad', kg: 550, icon: '🏍️' },
-  { n: 'Pferd', kg: 700, icon: '🐴' },
-  { n: 'Eisbär', kg: 900, icon: '🐻‍❄️' },
-  { n: 'Kleinwagen', kg: 1200, icon: '🚗' },
-  { n: 'Nilpferd', kg: 1800, icon: '🦛' },
-  { n: 'Nashorn', kg: 2300, icon: '🦏' },
-  { n: 'Elefant', kg: 6000, icon: '🐘' },
-  { n: 'Wohnmobil', kg: 8000, icon: '🚐' },
-  { n: 'Schulbus', kg: 12000, icon: '🚌' },
-  { n: 'Wal', kg: 15000, icon: '🐋' },
-  { n: 'Verkehrsflugzeug', kg: 180000, icon: '✈️' },
+  { n: 'House Cat', kg: 4, icon: '🐱' },
+  { n: 'Bulldog', kg: 25, icon: '🐶' },
+  { n: 'Tire', kg: 60, icon: '⭕' },
+  { n: 'A Human', kg: 75, icon: '🧍' },
+  { n: 'Washing Machine', kg: 90, icon: '🫧' },
+  { n: 'Fridge', kg: 120, icon: '🧊' },
+  { n: 'Lion', kg: 190, icon: '🦁' },
+  { n: 'Piano', kg: 300, icon: '🎹' },
+  { n: 'Cow', kg: 450, icon: '🐄' },
+  { n: 'Motorcycle', kg: 550, icon: '🏍️' },
+  { n: 'Horse', kg: 700, icon: '🐴' },
+  { n: 'Polar Bear', kg: 900, icon: '🐻‍❄️' },
+  { n: 'Small Car', kg: 1200, icon: '🚗' },
+  { n: 'Hippo', kg: 1800, icon: '🦛' },
+  { n: 'Rhino', kg: 2300, icon: '🦏' },
+  { n: 'Elephant', kg: 6000, icon: '🐘' },
+  { n: 'Motorhome', kg: 8000, icon: '🚐' },
+  { n: 'School Bus', kg: 12000, icon: '🚌' },
+  { n: 'Whale', kg: 15000, icon: '🐋' },
+  { n: 'Airliner', kg: 180000, icon: '✈️' },
 ]
 
 export const SOUNDS: Sound[] = [
   { id: 'beep', name: 'Beep', freq: 880, type: 'sine' },
-  { id: 'chime', name: 'Glocke', freq: 660, type: 'triangle' },
+  { id: 'chime', name: 'Chime', freq: 660, type: 'triangle' },
   { id: 'ding', name: 'Ding', freq: 1046, type: 'sine' },
-  { id: 'buzz', name: 'Summer', freq: 220, type: 'square' },
+  { id: 'buzz', name: 'Buzz', freq: 220, type: 'square' },
 ]
 
 export const DEFAULT_PLAN: PlanDay[] = [
   {
-    id: 'tag1', title: 'Tag 1 — Push', ex: [
-      { n: 'Bankdrücken', goal: '4×6–10', sets: 4, bodyweight: false, time: false },
-      { n: 'Schrägbankdrücken', goal: '3×8–12', sets: 3, bodyweight: false, time: false },
-      { n: 'Butterfly / Flys', goal: '3×12–15', sets: 3, bodyweight: false, time: false },
+    id: 'tag1', title: 'Day 1 — Push', ex: [
+      { n: 'Bench Press', goal: '4×6–10', sets: 4, bodyweight: false, time: false },
+      { n: 'Incline Bench Press', goal: '3×8–12', sets: 3, bodyweight: false, time: false },
+      { n: 'Chest Flys', goal: '3×12–15', sets: 3, bodyweight: false, time: false },
       { n: 'Dips', goal: '3×8–12', sets: 3, bodyweight: true, time: false },
-      { n: 'Trizepsdrücken', goal: '3×10–12', sets: 3, bodyweight: false, time: false },
+      { n: 'Tricep Pushdown', goal: '3×10–12', sets: 3, bodyweight: false, time: false },
     ],
   },
   {
-    id: 'tag2', title: 'Tag 2 — Pull', ex: [
-      { n: 'Latzug', goal: '4×8–12', sets: 4, bodyweight: false, time: false },
-      { n: 'Negative Klimmzüge', goal: '3× langsam', sets: 3, bodyweight: true, time: true },
-      { n: 'Vorgebeugtes Rudern', goal: '4×8–12', sets: 4, bodyweight: false, time: false },
+    id: 'tag2', title: 'Day 2 — Pull', ex: [
+      { n: 'Lat Pulldown', goal: '4×8–12', sets: 4, bodyweight: false, time: false },
+      { n: 'Negative Pull-Ups', goal: '3× slow', sets: 3, bodyweight: true, time: true },
+      { n: 'Bent-Over Row', goal: '4×8–12', sets: 4, bodyweight: false, time: false },
       { n: 'Face Pulls', goal: '3×12–15', sets: 3, bodyweight: false, time: false },
-      { n: 'Bizepscurls', goal: '3×10–12', sets: 3, bodyweight: false, time: false },
+      { n: 'Bicep Curls', goal: '3×10–12', sets: 3, bodyweight: false, time: false },
     ],
   },
   {
-    id: 'tag3', title: 'Tag 3 — Legs & Core', ex: [
-      { n: 'Kniebeugen', goal: '4×6–8', sets: 4, bodyweight: false, time: false },
-      { n: 'Ausfallschritte', goal: '3×10/Bein', sets: 3, bodyweight: false, time: false },
-      { n: 'Wadenheben', goal: '3×15–20', sets: 3, bodyweight: false, time: false },
-      { n: 'Tuck L-Sit', goal: '3× Halten', sets: 3, bodyweight: true, time: true },
-      { n: 'Plank', goal: '3× Halten', sets: 3, bodyweight: true, time: true },
+    id: 'tag3', title: 'Day 3 — Legs & Core', ex: [
+      { n: 'Squats', goal: '4×6–8', sets: 4, bodyweight: false, time: false },
+      { n: 'Lunges', goal: '3×10/leg', sets: 3, bodyweight: false, time: false },
+      { n: 'Calf Raises', goal: '3×15–20', sets: 3, bodyweight: false, time: false },
+      { n: 'Tuck L-Sit', goal: '3× hold', sets: 3, bodyweight: true, time: true },
+      { n: 'Plank', goal: '3× hold', sets: 3, bodyweight: true, time: true },
     ],
   },
   {
-    id: 'tag4', title: 'Tag 4 — Full Body', ex: [
+    id: 'tag4', title: 'Day 4 — Full Body', ex: [
       { n: 'Pike Push-Ups', goal: '3×8–12', sets: 3, bodyweight: true, time: false },
       { n: 'Dips', goal: '3×8–12', sets: 3, bodyweight: true, time: false },
-      { n: 'Negative Klimmzüge', goal: '3× langsam', sets: 3, bodyweight: true, time: true },
-      { n: 'Hollow Body Rocks', goal: '3× Halten', sets: 3, bodyweight: true, time: true },
-      { n: 'Plank', goal: '3× Halten', sets: 3, bodyweight: true, time: true },
+      { n: 'Negative Pull-Ups', goal: '3× slow', sets: 3, bodyweight: true, time: true },
+      { n: 'Hollow Body Rocks', goal: '3× hold', sets: 3, bodyweight: true, time: true },
+      { n: 'Plank', goal: '3× hold', sets: 3, bodyweight: true, time: true },
     ],
   },
 ]
@@ -99,7 +99,7 @@ export function fmtNum(n: number | null | undefined): string {
 }
 
 export function fmtKg(n: number): string {
-  return Math.round(n).toLocaleString('de-DE')
+  return Math.round(n).toLocaleString('en-US')
 }
 
 export function fmtTime(sec: number): string {

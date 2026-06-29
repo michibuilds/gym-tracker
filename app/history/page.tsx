@@ -17,10 +17,10 @@ export default function HistoryPage() {
     for (let i = MILESTONES.length - 1; i >= 0; i--) {
       if (total >= MILESTONES[i].kg) { m = MILESTONES[i]; break }
     }
-    if (!m) return { icon: '🪶', label: 'Auf dem Weg', sub: 'Erstes Training zählt!' }
+    if (!m) return { icon: '🪶', label: 'On your way', sub: 'First workout counts!' }
     const times = Math.floor(total / m.kg)
     const label = (times > 1 ? `${times} × ` : '') + m.n
-    return { icon: m.icon, label, sub: `das entspricht ${fmtKg(m.kg * times)} kg` }
+    return { icon: m.icon, label, sub: `that's ${fmtKg(m.kg * times)} kg` }
   }
 
   const cmp = compareToAnimal(total)
@@ -38,14 +38,13 @@ export default function HistoryPage() {
               <path d="M19 12H5M11 18l-6-6 6-6" />
             </svg>
           </button>
-          <p className="bigtitle">Verlauf</p>
+          <p className="bigtitle">History</p>
         </div>
 
-        {/* Hero stats */}
         <div style={{ textAlign: 'center', padding: '4px 0 20px' }}>
-          <p className="hero-label">Insgesamt bewegt</p>
+          <p className="hero-label">Total lifted</p>
           <p className="hero-num">{fmtKg(total)} kg</p>
-          <p className="hero-sub">{state.history.length} Training{state.history.length !== 1 ? 's' : ''}</p>
+          <p className="hero-sub">{state.history.length} workout{state.history.length !== 1 ? 's' : ''}</p>
           {total > 0 && (
             <div className="compare">
               <span style={{ fontSize: 28 }}>{cmp.icon}</span>
@@ -57,10 +56,9 @@ export default function HistoryPage() {
           )}
         </div>
 
-        {/* Milestones */}
         {total > 0 && (
           <>
-            <p className="section-label" style={{ marginTop: 0 }}>Meilensteine</p>
+            <p className="section-label" style={{ marginTop: 0 }}>Milestones</p>
             {visibleMilestones.map((m, idx) => {
               const done = total >= m.kg
               const isNext = startIdx + idx === nextIdx
@@ -81,25 +79,22 @@ export default function HistoryPage() {
           </>
         )}
 
-        {/* Recent workouts */}
-        <p className="section-label">Letzte Trainings</p>
+        <p className="section-label">Recent Workouts</p>
         {state.history.length === 0 ? (
-          <div className="empty">
-            Noch keine Trainings abgeschlossen.<br />Starte dein erstes Workout!
-          </div>
+          <div className="empty">No workouts yet.<br />Start your first session!</div>
         ) : (
           [...state.history].reverse().slice(0, 10).map((h, i) => {
             const d = new Date(h.date)
-            const movedTxt = h.moved > 0 ? `${fmtKg(h.moved)} kg bewegt` : 'Calisthenics'
+            const movedTxt = h.moved > 0 ? `${fmtKg(h.moved)} kg lifted` : 'Calisthenics'
             return (
               <div key={i} className="histcard">
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span className="histday">{h.title}</span>
                   <span className="histdate">
-                    {WEEKDAYS[d.getDay()].slice(0, 2)}, {d.getDate()}. {MONTHS[d.getMonth()].slice(0, 3)}
+                    {WEEKDAYS[d.getDay()].slice(0, 3)}, {MONTHS[d.getMonth()].slice(0, 3)} {d.getDate()}
                   </span>
                 </div>
-                <span className="histmeta">{h.exCount} Übungen · {movedTxt}</span>
+                <span className="histmeta">{h.exCount} exercises · {movedTxt}</span>
               </div>
             )
           })

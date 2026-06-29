@@ -16,18 +16,14 @@ export default function HomePage() {
   }, [])
 
   if (loading) {
-    return (
-      <div className="loading-screen">
-        <div style={{ color: 'var(--dim)', fontSize: 14 }}>Laden…</div>
-      </div>
-    )
+    return <div className="loading-screen"><div style={{ color: 'var(--dim)', fontSize: 14 }}>Loading…</div></div>
   }
 
   if (!state) {
     return (
       <div className="loading-screen">
         <div style={{ color: 'var(--dim)', fontSize: 14, textAlign: 'center', padding: '0 32px' }}>
-          Supabase nicht verbunden.<br />Bitte .env.local einrichten.
+          Supabase not connected.<br />Please set up .env.local
         </div>
       </div>
     )
@@ -43,19 +39,19 @@ export default function HomePage() {
         return WEEKDAYS[d.getDay()]
       }
     }
-    return 'diese Woche'
+    return 'this week'
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
       <div className="scroll">
-        <p className="greet-sub">Willkommen zurück</p>
-        <p className="greet-h">Zeit zu trainieren.</p>
+        <p className="greet-sub">Welcome back</p>
+        <p className="greet-h">Time to train.</p>
         <p className="greet-meta">
-          {WEEKDAYS[now.getDay()]}, {now.getDate()}. {MONTHS[now.getMonth()]} · {pad(now.getHours())}:{pad(now.getMinutes())} · {done}/{state.plan.length} Tage diese Woche
+          {WEEKDAYS[now.getDay()]}, {MONTHS[now.getMonth()]} {now.getDate()} · {pad(now.getHours())}:{pad(now.getMinutes())} · {done}/{state.plan.length} days this week
         </p>
 
-        <p className="section-label">Trainingstag</p>
+        <p className="section-label">Training Day</p>
 
         {state.plan.map((day, i) => {
           const isDone = !!state.doneThisWeek[day.id]
@@ -77,10 +73,10 @@ export default function HomePage() {
                 <span className="dayttl">{day.title}</span>
                 <span className="daysub">
                   {isDone
-                    ? `Erledigt · ${lastDoneLabel(day.id)}`
+                    ? `Done · ${lastDoneLabel(day.id)}`
                     : isToday
-                    ? `Heute fällig · ${day.ex.length} Übungen`
-                    : `${day.ex.length} Übungen`}
+                    ? `Today · ${day.ex.length} exercises`
+                    : `${day.ex.length} exercises`}
                 </span>
               </span>
               {isToday && <span className="runpill">Start</span>}
@@ -95,7 +91,7 @@ export default function HomePage() {
             </svg>
           </span>
           <span style={{ flex: 1 }}>
-            <span className="dayttl" style={{ color: 'var(--acc)' }}>Eigenen Tag erstellen</span>
+            <span className="dayttl" style={{ color: 'var(--acc)' }}>Create custom day</span>
           </span>
         </button>
 

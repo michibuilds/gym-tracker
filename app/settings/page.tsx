@@ -20,16 +20,13 @@ export default function SettingsPage() {
       for (let i = 0; i < 3; i++) {
         const osc = ctx.createOscillator()
         const gain = ctx.createGain()
-        osc.type = snd.type
-        osc.frequency.value = snd.freq
-        osc.connect(gain)
-        gain.connect(ctx.destination)
+        osc.type = snd.type; osc.frequency.value = snd.freq
+        osc.connect(gain); gain.connect(ctx.destination)
         const st = t + i * 0.25
         gain.gain.setValueAtTime(0, st)
         gain.gain.linearRampToValueAtTime(0.3, st + 0.02)
         gain.gain.exponentialRampToValueAtTime(0.001, st + 0.2)
-        osc.start(st)
-        osc.stop(st + 0.2)
+        osc.start(st); osc.stop(st + 0.2)
       }
     } catch { /* ignore */ }
   }
@@ -42,11 +39,9 @@ export default function SettingsPage() {
     const d = new Date()
     a.href = url
     a.download = `gymtracker-backup-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+    document.body.appendChild(a); a.click(); document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    toast('Backup exportiert')
+    toast('Backup exported')
   }
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -55,18 +50,18 @@ export default function SettingsPage() {
     const text = await file.text()
     try {
       await importData(text)
-      toast('Backup importiert')
+      toast('Backup imported')
       router.push('/')
     } catch {
-      toast('Import fehlgeschlagen')
+      toast('Import failed')
     }
     e.target.value = ''
   }
 
   async function handleReset() {
-    if (confirm('Erledigt-Markierungen für diese Woche zurücksetzen?')) {
+    if (confirm('Reset this week\'s completed days?')) {
       await resetWeek()
-      toast('Woche zurückgesetzt')
+      toast('Week reset')
       router.push('/')
     }
   }
@@ -80,25 +75,20 @@ export default function SettingsPage() {
               <path d="M19 12H5M11 18l-6-6 6-6" />
             </svg>
           </button>
-          <p className="bigtitle">Einstellungen</p>
+          <p className="bigtitle">Settings</p>
         </div>
 
-        <p className="section-label">Timer-Ton</p>
+        <p className="section-label">Timer Sound</p>
         {SOUNDS.map((s) => {
           const active = state.sound === s.id
           return (
             <div key={s.id} className="setting-row">
-              <div>
-                <div style={{ fontSize: 14 }}>{s.name}</div>
-              </div>
+              <div><div style={{ fontSize: 14 }}>{s.name}</div></div>
               <button
                 className={`pill${active ? '' : ' ghost'}`}
-                onClick={async () => {
-                  await saveSound(s.id)
-                  playSound(s.id)
-                }}
+                onClick={async () => { await saveSound(s.id); playSound(s.id) }}
               >
-                {active ? 'Aktiv' : 'Wählen'}
+                {active ? 'Active' : 'Select'}
               </button>
             </div>
           )
@@ -107,25 +97,25 @@ export default function SettingsPage() {
         <p className="section-label">Backup</p>
         <div className="setting-row">
           <div>
-            <div style={{ fontSize: 14 }}>Daten exportieren</div>
-            <div style={{ fontSize: 12, color: 'var(--faint)', marginTop: 2 }}>Als Backup-Datei sichern</div>
+            <div style={{ fontSize: 14 }}>Export data</div>
+            <div style={{ fontSize: 12, color: 'var(--faint)', marginTop: 2 }}>Save as backup file</div>
           </div>
           <button className="pill" onClick={handleExport}>Export</button>
         </div>
         <div className="setting-row">
           <div>
-            <div style={{ fontSize: 14 }}>Daten importieren</div>
-            <div style={{ fontSize: 12, color: 'var(--faint)', marginTop: 2 }}>Backup wiederherstellen</div>
+            <div style={{ fontSize: 14 }}>Import data</div>
+            <div style={{ fontSize: 12, color: 'var(--faint)', marginTop: 2 }}>Restore from backup</div>
           </div>
           <button className="pill ghost" onClick={() => fileRef.current?.click()}>Import</button>
         </div>
         <input ref={fileRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={handleImport} />
 
-        <p className="section-label">Zurücksetzen</p>
+        <p className="section-label">Reset</p>
         <div className="setting-row">
           <div>
-            <div style={{ fontSize: 14 }}>Neue Woche starten</div>
-            <div style={{ fontSize: 12, color: 'var(--faint)', marginTop: 2 }}>Erledigt-Markierungen zurücksetzen</div>
+            <div style={{ fontSize: 14 }}>New week</div>
+            <div style={{ fontSize: 12, color: 'var(--faint)', marginTop: 2 }}>Reset completed days</div>
           </div>
           <button className="pill ghost" onClick={handleReset}>Reset</button>
         </div>

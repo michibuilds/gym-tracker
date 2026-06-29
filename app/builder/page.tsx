@@ -18,19 +18,19 @@ export default function BuilderPage() {
 
   async function save() {
     const trimmed = name.trim()
-    if (!trimmed) { toast('Bitte einen Namen eingeben'); return }
+    if (!trimmed) { toast('Please enter a name'); return }
     const sel = Object.keys(selected).filter((k) => selected[k])
-    if (sel.length === 0) { toast('Mindestens eine Übung wählen'); return }
+    if (sel.length === 0) { toast('Select at least one exercise'); return }
 
     const ex = sel.map((n) => {
       const isTime = TIME_EXERCISES.includes(n)
       const isBody = BODYWEIGHT_EXERCISES.includes(n) || isTime
-      return { n, goal: isTime ? '3× Halten' : '3×8–12', sets: 3, bodyweight: isBody, time: isTime }
+      return { n, goal: isTime ? '3× hold' : '3×8–12', sets: 3, bodyweight: isBody, time: isTime }
     })
 
     const day: PlanDay = { id: 'custom' + Date.now(), title: trimmed, ex }
     await addCustomDay(day)
-    toast('Trainingstag gespeichert')
+    toast('Training day saved')
     router.push('/')
   }
 
@@ -43,13 +43,13 @@ export default function BuilderPage() {
               <path d="M19 12H5M11 18l-6-6 6-6" />
             </svg>
           </button>
-          <p className="bigtitle">Neuer Trainingstag</p>
+          <p className="bigtitle">New Training Day</p>
         </div>
 
         <input
           type="text"
           className="darkinput"
-          placeholder="Name, z. B. Tag 5 — Oberkörper"
+          placeholder="Name, e.g. Day 5 — Upper Body"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -58,7 +58,7 @@ export default function BuilderPage() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 12h2M20 12h2M5 8v8M19 8v8M8 10v4M16 10v4M8 12h8" />
           </svg>
-          Krafttraining
+          Strength
         </div>
         <div className="exgrid">
           {EXERCISES.kraft.map((n) => (
@@ -84,7 +84,7 @@ export default function BuilderPage() {
         </div>
 
         <button className="pill big" style={{ marginTop: 20, width: '100%' }} onClick={save}>
-          Tag für diese Woche speichern
+          Save day
         </button>
         <div style={{ height: 20 }} />
       </div>

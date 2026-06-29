@@ -14,7 +14,7 @@ function VField({
   initialVal: number
   onUpdate: (val: number) => void
 }) {
-  const step = which === 'kg' ? 2.5 : 1
+  const step = which === 'kg' ? 0.5 : 1
   const min = which === 'kg' ? 0 : which === 'sec' ? 1 : 0
   const PXSTEP = 14
   const [val, setVal] = useState(initialVal)
@@ -131,10 +131,16 @@ function SetRow({
     startY.current = e.touches[0].clientY
     decided.current = false
     horiz.current = false
+    // Remove CSS class so !important doesn't block inline transform during drag
+    if (isDoneRef.current && rowRef.current) {
+      rowRef.current.classList.remove('done')
+      rowRef.current.style.transform = `translateX(${maxX}px)`
+    }
     rowRef.current?.classList.remove('settled')
   }
 
   function onTouchMove(e: React.TouchEvent) {
+    if ((e.target as HTMLElement).closest('.vfield')) return
     const dx = e.touches[0].clientX - startX.current
     const dy = e.touches[0].clientY - startY.current
     if (!decided.current) {
@@ -168,6 +174,8 @@ function SetRow({
         onDoneChange(false)
       }
     }
+    decided.current = false
+    horiz.current = false
   }
 
   return (
